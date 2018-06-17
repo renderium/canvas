@@ -4,19 +4,46 @@
   (global.Canvas = factory());
 }(this, (function () { 'use strict';
 
-  var Canvas = function Canvas (options) {};
+  function noop () {}
 
-  Canvas.digest = function digest (time) {};
+  var queue = [];
+  var canvas;
+  var prevTime;
 
-  Canvas.prototype.render = function render (renderer) {};
+  var Canvas = function Canvas (options) {
+    this.renderer = noop;
+    this.inQueue = false;
+  };
 
-  Canvas.prototype.enqueue = function enqueue () {};
+  Canvas.digest = function digest (time) {
+    prevTime = prevTime || time;
+    while ((canvas = queue.shift())) {
+      canvas.clear();
+      canvas.redraw(canvas, prevTime - time, time);
+      canvas.dequeue();
+    }
+    prevTime = time;
+  };
 
-  Canvas.prototype.dequeue = function dequeue () {};
+  Canvas.prototype.render = function render (renderer) {
+    this.renderer = renderer;
+  };
+
+  Canvas.prototype.enqueue = function enqueue () {
+    if (this.inQueue) { return }
+    queue.push(this);
+    this.inQueue = true;
+  };
+
+  Canvas.prototype.dequeue = function dequeue () {
+    this.inQueue = false;
+  };
 
   Canvas.prototype.clear = function clear () {};
 
-  Canvas.prototype.redraw = function redraw (canvas, delta, elapsed) {};
+  Canvas.prototype.redraw = function redraw (canvas, delta, elapsed) {
+    this.renderer(canvas, delta, elapsed);
+  };
 
   Canvas.prototype.arc = function arc (options) {};
 

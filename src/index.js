@@ -5,20 +5,40 @@ var canvas
 var prevTime
 
 class Canvas {
+  static digest (time) {
+    prevTime = prevTime || time
+    while ((canvas = queue.shift())) {
+      canvas.clear()
+      canvas.redraw(canvas, prevTime - time, time)
+      canvas.dequeue()
+    }
+    prevTime = time
+  }
 
-  static digest (time) {}
+  constructor (options) {
+    this.renderer = noop
+    this.inQueue = false
+  }
 
-  constructor (options) {}
+  render (renderer) {
+    this.renderer = renderer
+  }
 
-  render (renderer) {}
+  enqueue () {
+    if (this.inQueue) return
+    queue.push(this)
+    this.inQueue = true
+  }
 
-  enqueue () {}
-
-  dequeue () {}
+  dequeue () {
+    this.inQueue = false
+  }
 
   clear () {}
 
-  redraw (canvas, delta, elapsed) {}
+  redraw (canvas, delta, elapsed) {
+    this.renderer(canvas, delta, elapsed)
+  }
 
   arc (options) {}
 
