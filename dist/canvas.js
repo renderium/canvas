@@ -1,58 +1,111 @@
 function noop () {}
 
+var pixelRatio = window.devicePixelRatio || 1;
 var queue = [];
 var canvas;
 var prevTime;
 
-var Canvas = function Canvas (options) {
-  this.renderer = noop;
-  this.inQueue = false;
-};
-
-Canvas.digest = function digest (time) {
-  prevTime = prevTime || time;
-  while ((canvas = queue.shift())) {
-    canvas.clear();
-    canvas.redraw(canvas, prevTime - time, time);
-    canvas.dequeue();
+class Canvas {
+  static digest (time) {
+    prevTime = prevTime || time;
+    while ((canvas = queue.shift())) {
+      canvas.scale();
+      canvas.clear();
+      canvas.redraw(canvas, prevTime - time, time);
+      canvas.dequeue();
+    }
+    prevTime = time;
   }
-  prevTime = time;
-};
 
-Canvas.prototype.render = function render (renderer) {
-  this.renderer = renderer;
-};
+  constructor (options) {
+    this.el = options.el;
+    this.canvas = document.createElement('canvas');
+    this.ctx = canvas.getContext('2d');
+    this.renderer = noop;
+    this.inQueue = false;
+    this.width = 0;
+    this.height = 0;
+    this.el.appendChild(this.canvas);
+    this.scale();
+  }
 
-Canvas.prototype.enqueue = function enqueue () {
-  if (this.inQueue) { return }
-  queue.push(this);
-  this.inQueue = true;
-};
+  render (renderer) {
+    this.renderer = renderer;
+  }
 
-Canvas.prototype.dequeue = function dequeue () {
-  this.inQueue = false;
-};
+  enqueue () {
+    if (this.inQueue) return
+    queue.push(this);
+    this.inQueue = true;
+  }
 
-Canvas.prototype.clear = function clear () {};
+  dequeue () {
+    this.inQueue = false;
+  }
 
-Canvas.prototype.redraw = function redraw (canvas, delta, elapsed) {
-  this.renderer(canvas, delta, elapsed);
-};
+  clear () {
+    this.ctx.save();
+    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+    this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
+    this.ctx.restore();
+  }
 
-Canvas.prototype.arc = function arc (options) {};
+  scale () {
+    var width = this.el.clientWidth;
+    var height = this.el.clientHeight;
+    if (width !== this.width || height !== this.height) {
+      this.width = width;
+      this.height = height;
+      this.canvas.width = this.width * pixelRatio;
+      this.canvas.height = this.height * pixelRatio;
+      this.ctx.scale(pixelRatio, pixelRatio);
+      this.ctx.translate(0.5, 0.5);
+    }
+  }
 
-Canvas.prototype.circle = function circle (options) {};
+  redraw (canvas, delta, elapsed) {
+    this.renderer(canvas, delta, elapsed);
+  }
 
-Canvas.prototype.image = function image (options) {};
+  arc (options) {
+    var x = options.x;
+    var y = options.y;
+    var radius = options.radius;
+    var theta = options.theta;
+    var length = options.length;
+    var stroke = options.stroke;
+    var width = options.width || 1;
+    var opacity = options.opacity || 1;
+    var ctx = this.ctx;
 
-Canvas.prototype.polygon = function polygon (options) {};
+    ctx.save();
 
-Canvas.prototype.polyline = function polyline (options) {};
+    ctx.translate(x, y);
+    ctx.rotate(theta);
+    ctx.lineWidth = width;
+    ctx.strokeStyle = stroke;
+    ctx.globalAlpha = opacity;
 
-Canvas.prototype.rect = function rect (options) {};
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, 0, length);
+    ctx.stroke();
 
-Canvas.prototype.text = function text (options) {};
+    ctx.restore();
+  }
 
-Canvas.prototype.group = function group (options) {};
+  circle (options) {}
+
+  image (options) {}
+
+  polygon (options) {}
+
+  polyline (options) {}
+
+  rect (options) {}
+
+  text (options) {}
+
+  group (options) {}
+}
 
 export default Canvas;
