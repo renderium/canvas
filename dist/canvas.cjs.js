@@ -58,6 +58,8 @@ class Canvas {
     if (width !== this.width || height !== this.height) {
       this.width = width;
       this.height = height;
+      this.canvas.style.width = `${this.width}px`;
+      this.canvas.style.height = `${this.height}px`;
       this.canvas.width = this.width * pixelRatio;
       this.canvas.height = this.height * pixelRatio;
       this.ctx.scale(pixelRatio, pixelRatio);
