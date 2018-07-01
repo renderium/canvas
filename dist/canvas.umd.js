@@ -26,7 +26,7 @@
     constructor (options) {
       this.el = options.el;
       this.canvas = document.createElement('canvas');
-      this.ctx = canvas.getContext('2d');
+      this.ctx = this.canvas.getContext('2d');
       this.renderer = noop;
       this.inQueue = false;
       this.width = 0;
